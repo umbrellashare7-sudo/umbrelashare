@@ -1,0 +1,7 @@
+{
+  "name": "UmbrellaShare",
+  "description": "A smart campus umbrella sharing system with AI-powered weather alerts and rental management.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
