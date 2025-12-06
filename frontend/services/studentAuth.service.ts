@@ -1,4 +1,4 @@
-import { http } from "./http";
+import http from "./http";
 
 export async function registerStudent(
   name: string,
@@ -17,5 +17,3 @@ export async function loginStudent(email: string, password: string) {
     body: JSON.stringify({ email, password }),
   });
 }
-
-

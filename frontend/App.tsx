@@ -81,6 +81,9 @@ const App: React.FC = () => {
     setView(target);
   };
 
+ 
+
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
       {/* NAVBAR */}
@@ -123,7 +126,9 @@ const App: React.FC = () => {
               {user ? (
                 <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold">
-                    {user?.name?.charAt(0) ?? ""}
+                    {typeof user?.name === "string"
+                      ? user.name[0].toUpperCase()
+                      : ""}
                   </div>
                   <button
                     onClick={handleLogout}

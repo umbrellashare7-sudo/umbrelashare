@@ -1,7 +1,5 @@
-import API_BASE_URL from "./api";
-
-export async function http(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+async function http(path: string, options: RequestInit = {}) {
+  const res = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
@@ -10,9 +8,18 @@ export async function http(path: string, options: RequestInit = {}) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Request failed");
+    let txt = "";
+    try {
+      txt = await res.text();
+    } catch {}
+    throw new Error(txt || "Request failed");
   }
 
-  return res.json().catch(() => null);
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
+
+export default http;

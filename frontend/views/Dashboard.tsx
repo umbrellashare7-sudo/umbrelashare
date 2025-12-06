@@ -24,6 +24,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
   const [refresh, setRefresh] = useState(0);
 
   // Modal State
+  
   const [activeModal, setActiveModal] = useState<{ type: 'borrow' | 'return', umbrellaId?: string } | null>(null);
   const [returnLocation, setReturnLocation] = useState<LocationType>('Main Gate');
   const [securityCode, setSecurityCode] = useState('');
@@ -130,12 +131,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
   }
 
 
+
+
   // Filter Logic
   const filteredUmbrellas = umbrellas.filter(u => {
       const matchesLoc = u.location === selectedLocation;
       const matchesStatus = filterStatus === 'all' ? true : u.status === 'available';
       return matchesLoc && matchesStatus;
   });
+
+  console.log("USER:", user);
+
 
   return (
     <div className="p-6 max-w-6xl mx-auto min-h-screen relative">

@@ -30,14 +30,15 @@ app.use("/api/transactions", transactionRoutes);
 console.log("Loaded Mongo URI:", process.env.MONGO_URI);
 app.use("/api/student/auth", studentAuthRoutes);
 
-
-
-/* === STATIC FRONTEND === */
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "frontend/dist")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
 });
+
+
+
+
 
 const PORT = process.env.PORT || 3000;
 
