@@ -132,7 +132,7 @@ exports.return = async (req, res) => {
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
 
-    // DEBUG HERE — AFTER umbrella is defined
+    // DEBUG HERE — umbrella is defined ✔
     console.log("RETURN DEBUG:", {
       umbrellaId,
       studentId,
@@ -173,7 +173,8 @@ exports.return = async (req, res) => {
     umbrella.currentLocation = returnLocation;
 
     await umbrella.save();
-    // Update student record
+
+    // Clear borrowed umbrella from student
     const student = await Student.findById(studentId);
     if (student) {
       student.borrowedUmbrellaId = null;
@@ -185,7 +186,6 @@ exports.return = async (req, res) => {
     console.error("Return error:", err);
     return res.status(500).json({ message: "Server error" });
   }
-  
 };
 
 /* =====================================================
