@@ -19,14 +19,24 @@ async function requireUser(req, res, next) {
     // Try admin
     let user = await Admin.findById(decoded.id).select("-passwordHash");
     if (user) {
-      req.user = { ...user.toObject(), role: "admin" };
+      req.user = {
+        ...user.toObject(),
+        id: user._id.toString(),
+        role: "admin",
+      };
+
       return next();
     }
 
     // Try student
     user = await Student.findById(decoded.id).select("-password");
     if (user) {
-      req.user = { ...user.toObject(), role: "student" };
+      req.user = {
+        ...user.toObject(),
+        id: user._id.toString(), // <-- ADD THIS LINE
+        role: "student",
+      };
+
       return next();
     }
 
