@@ -71,31 +71,19 @@ exports.login = async (req, res) => {
 ------------------------------------- */
 exports.me = async (req, res) => {
   try {
-    const user = req.user; // set in authUser middleware
+    const user = req.user; // injected by middleware
 
-    if (!user) return res.status(401).json({ message: "Not authenticated" });
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-    // Admin detection
-    if (user.passwordHash) {
-      return res.json({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: "admin",
-      });
-    }
-
-    // Student fallback
-    return res.json({
-      id: user._id,
+    res.json({
+      id: user.id,
       name: user.name,
       email: user.email,
-      role: "student",
-      balance: user.balance,
+      role: user.role, // <-- FIXED
+      balance: user.balance || 0,
       borrowedUmbrellaId: user.borrowedUmbrellaId || null,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };

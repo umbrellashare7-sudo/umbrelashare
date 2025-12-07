@@ -28,16 +28,14 @@ const App: React.FC = () => {
   }, []);
 
   const loadUser = async () => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      // No token — ensure UI is in logged out state and avoid calling getMe()
-      setUser(null);
-      return;
-    }
-
     try {
-      const me = await getMe(); // still uses localStorage token internally
-      console.log("ME RESPONSE:", me);
+      const me = await getMe(); // backend: /api/auth/me
+
+      if (!me || !me.role) {
+        console.error("Invalid user data", me);
+        return;
+      }
+
       setUser(me);
 
       if (me.role === "admin") setView("admin");
@@ -46,9 +44,9 @@ const App: React.FC = () => {
       console.error("Failed to refresh user:", err);
       localStorage.removeItem("auth_token");
       setUser(null);
-      setView("home");
     }
   };
+
 
 
   // -----------------------------

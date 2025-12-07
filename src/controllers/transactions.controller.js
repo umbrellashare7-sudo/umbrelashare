@@ -49,8 +49,9 @@ exports.borrow = async (req, res) => {
     });
 
     umbrella.isAvailable = false;
-    umbrella.currentLocation = `with:${studentId}`;
+    umbrella.currentLocation = `with:${studentName}`; // <-- store name instead of ID
     await umbrella.save();
+
 
     
 
