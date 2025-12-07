@@ -124,16 +124,6 @@ exports.borrow = async (req, res) => {
 exports.return = async (req, res) => {
   try {
     const { umbrellaId, studentId, code, returnLocation } = req.body;
-    console.log("RETURN DEBUG:", {
-      umbrellaId,
-      studentId,
-      code,
-      returnLocation,
-      umbrella,
-      expectedCode: umbrella?.activeReturnCode,
-      expiresAt: umbrella?.activeReturnCodeExpiresAt,
-    });
-
 
     if (!umbrellaId || !studentId || !code || !returnLocation)
       return res.status(400).json({ message: "Missing fields" });
@@ -141,6 +131,16 @@ exports.return = async (req, res) => {
     const umbrella = await Umbrella.findOne({ umbrellaId });
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
+
+    // DEBUG HERE — AFTER umbrella is defined
+    console.log("RETURN DEBUG:", {
+      umbrellaId,
+      studentId,
+      code,
+      returnLocation,
+      expectedCode: umbrella.activeReturnCode,
+      expiresAt: umbrella.activeReturnCodeExpiresAt,
+    });
 
     // Validate return code + expiry
     if (
