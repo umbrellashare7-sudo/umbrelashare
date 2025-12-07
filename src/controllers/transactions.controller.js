@@ -128,11 +128,12 @@ exports.return = async (req, res) => {
     if (!umbrellaId || !studentId || !code || !returnLocation)
       return res.status(400).json({ message: "Missing fields" });
 
+    // FIND UMBRELLA FIRST ✔
     const umbrella = await Umbrella.findOne({ umbrellaId });
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
 
-    // DEBUG HERE — umbrella is defined ✔
+    // NOW YOU CAN READ IT ✔
     console.log("RETURN DEBUG:", {
       umbrellaId,
       studentId,
@@ -142,7 +143,7 @@ exports.return = async (req, res) => {
       expiresAt: umbrella.activeReturnCodeExpiresAt,
     });
 
-    // Validate return code + expiry
+    // VALIDATE CODE
     if (
       umbrella.activeReturnCode !== code ||
       !umbrella.activeReturnCodeExpiresAt ||
@@ -153,6 +154,7 @@ exports.return = async (req, res) => {
         .json({ message: "Invalid or expired return code" });
     }
 
+    // FIND OPEN TRANSACTION
     const tx = await Transaction.findOne({
       umbrellaId,
       studentId,
@@ -165,16 +167,14 @@ exports.return = async (req, res) => {
     tx.status = "COMPLETED";
     await tx.save();
 
-    // Clear return code
+    // CLEAR RETURN CODE
     umbrella.activeReturnCode = null;
     umbrella.activeReturnCodeExpiresAt = null;
-
     umbrella.isAvailable = true;
     umbrella.currentLocation = returnLocation;
-
     await umbrella.save();
 
-    // Clear borrowed umbrella from student
+    // CLEAR student record
     const student = await Student.findById(studentId);
     if (student) {
       student.borrowedUmbrellaId = null;
@@ -187,6 +187,7 @@ exports.return = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 /* =====================================================
    ADMIN VIEWS
