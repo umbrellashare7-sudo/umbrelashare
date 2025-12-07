@@ -124,6 +124,16 @@ exports.borrow = async (req, res) => {
 exports.return = async (req, res) => {
   try {
     const { umbrellaId, studentId, code, returnLocation } = req.body;
+    console.log("RETURN DEBUG:", {
+      umbrellaId,
+      studentId,
+      code,
+      returnLocation,
+      umbrella,
+      expectedCode: umbrella?.activeReturnCode,
+      expiresAt: umbrella?.activeReturnCodeExpiresAt,
+    });
+
 
     if (!umbrellaId || !studentId || !code || !returnLocation)
       return res.status(400).json({ message: "Missing fields" });
