@@ -9,8 +9,12 @@ const Student = require("../models/student.model"); // if not imported
 ===================================================== */
 exports.borrow = async (req, res) => {
   try {
-    const { umbrellaId, studentId, studentName, pickupLocation, code } =
-      req.body;
+    const umbrellaId = req.body.umbrellaId;
+    const pickupLocation = req.body.pickupLocation;
+    const code = req.body.code;
+
+    const studentId = req.user.id; // ALWAYS AUTHENTIC
+    const studentName = req.user.name; // ALWAYS AUTHENTIC
 
     if (!umbrellaId || !studentId || !pickupLocation || !code)
       return res.status(400).json({ message: "Missing fields" });
@@ -52,9 +56,6 @@ exports.borrow = async (req, res) => {
     umbrella.currentLocation = `with:${studentName}`; // <-- store name instead of ID
     await umbrella.save();
 
-
-    
-
     // Update student record
     const student = await Student.findById(studentId);
     if (student) {
@@ -92,11 +93,9 @@ exports.borrow = async (req, res) => {
           "BORROW FAILED: student lookup failed. studentId provided:",
           studentId
         );
-        return res
-          .status(400)
-          .json({
-            message: "Student not found (check studentId sent by client)",
-          });
+        return res.status(400).json({
+          message: "Student not found (check studentId sent by client)",
+        });
       }
 
       // At this point student is a mongoose doc if found — if .lean() above returned a plain object, re-fetch as doc:
@@ -108,7 +107,6 @@ exports.borrow = async (req, res) => {
       student.borrowedUmbrellaId = umbrellaId;
       await student.save();
     }
-    
 
     return res.json({ message: "Borrow successful", txId: tx._id });
   } catch (err) {
@@ -123,7 +121,11 @@ exports.borrow = async (req, res) => {
 ===================================================== */
 exports.return = async (req, res) => {
   try {
-    const { umbrellaId, studentId, code, returnLocation } = req.body;
+    const umbrellaId = req.body.umbrellaId;
+    const returnLocation = req.body.returnLocation;
+    const code = req.body.code;
+
+    const studentId = req.user.id; // ALWAYS CORRECT
 
     if (!umbrellaId || !studentId || !code || !returnLocation)
       return res.status(400).json({ message: "Missing fields" });
@@ -157,10 +159,11 @@ exports.return = async (req, res) => {
     // FIND OPEN TRANSACTION
     const tx = await Transaction.findOne({
       umbrellaId,
-      studentId,
+      studentId: req.user.id,
       action: "BORROW",
       status: "OPEN",
     });
+
 
     if (!tx) return res.status(400).json({ message: "No open rental found" });
 

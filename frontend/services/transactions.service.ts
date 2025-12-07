@@ -4,8 +4,6 @@ const API = import.meta.env.VITE_BACKEND_URL;
 
 // STUDENT — Borrow umbrella
 export const borrowUmbrella = async (payload: {
-  studentId: string;
-  studentName: string;
   umbrellaId: string;
   pickupLocation: string;
   code: string;
@@ -21,7 +19,6 @@ export const borrowUmbrella = async (payload: {
 
 // STUDENT — Return umbrella
 export const returnUmbrella = async (payload: {
-  studentId: string;
   umbrellaId: string;
   returnLocation: string;
   code: string;

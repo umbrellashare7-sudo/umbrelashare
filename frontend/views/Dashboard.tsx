@@ -85,14 +85,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
     if (activeModal?.type === "borrow" && activeModal.umbrellaId) {
       try {
         await borrowUmbrella({
-          studentId: user.id,
-          studentName: user.name,
           umbrellaId: activeModal.umbrellaId,
           pickupLocation: selectedLocation,
           code: securityCode,
-          
-          
         });
+
         
 
         // refresh dashboard
@@ -108,11 +105,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
     else if (activeModal?.type === "return") {
       try {
         await returnUmbrella({
-          studentId: user.id,
           umbrellaId: user.borrowedUmbrellaId,
           returnLocation,
           code: securityCode,
         });
+
 
 
 
