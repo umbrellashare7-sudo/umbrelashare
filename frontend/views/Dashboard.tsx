@@ -73,10 +73,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
     e.preventDefault();
 
     // Temporary validation until backend uses real codes
-    if (securityCode !== "1234") {
-      setError("Invalid code. (Hint: Use 1234 for demo)");
+    if (!securityCode || securityCode.length !== 4) {
+      setError("Enter a 4-digit code");
       return;
     }
+
+    
+
 
     // ✅ BORROW
     if (activeModal?.type === "borrow" && activeModal.umbrellaId) {
@@ -87,7 +90,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
           umbrellaId: activeModal.umbrellaId,
           pickupLocation: selectedLocation,
           code: securityCode,
+          
+          
         });
+        
 
         // refresh dashboard
         setRefresh((p) => p + 1);
@@ -359,7 +365,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onUserUpdate }) =
                   <p className="text-slate-400 text-xs text-center mt-2 italic">
                     {activeModal.type === "return"
                       ? "(Enter the code shown on the Station Screen: 1234)"
-                      : "(Enter code 1234 for demo)"}
+                      : "(Enter the security code shown in the admin panel)"}
                   </p>
                 )}
               </div>

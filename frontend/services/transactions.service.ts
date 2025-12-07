@@ -43,7 +43,7 @@ export const getAllLogs = async (token?: string) => {
     headers: { Authorization: `Bearer ${auth}` },
   });
 
-  return res.data.logs;
+  return res.data; // <-- FIX
 };
 
 // ADMIN — Active verification codes
@@ -54,5 +54,6 @@ export const getActiveCodes = async (token?: string) => {
     headers: { Authorization: `Bearer ${auth}` },
   });
 
-  return res.data.codes;
+  return res.data; // <-- FIX
 };
+

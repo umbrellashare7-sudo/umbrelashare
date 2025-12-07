@@ -3,9 +3,10 @@ const Umbrella = require("../models/Umbrella");
 // ------------------------------
 // 6-digit random code generator
 // ------------------------------
-function generate6DigitCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+function generateCode4() {
+  return Math.floor(1000 + Math.random() * 9000).toString(); // 4 digits
 }
+
 
 
 exports.list = async (req, res) => {
@@ -87,7 +88,7 @@ exports.generateCode = async (req, res) => {
       return res.status(404).json({ message: "Umbrella not found" });
 
     // Generate code + expiry
-    const code = generate6DigitCode();
+    const code = generateCode4();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     if (type === "borrow") {
