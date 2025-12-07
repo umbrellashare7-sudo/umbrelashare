@@ -13,17 +13,17 @@ exports.borrow = async (req, res) => {
     const pickupLocation = req.body.pickupLocation;
     const code = req.body.code;
 
-    const studentId = req.user.id; // ALWAYS AUTHENTIC
-    const studentName = req.user.name; // ALWAYS AUTHENTIC
+    const studentId = req.user.id;
+    const studentName = req.user.name;
 
-    if (!umbrellaId || !studentId || !pickupLocation || !code)
+    if (!umbrellaId || !pickupLocation || !code)
       return res.status(400).json({ message: "Missing fields" });
 
     const umbrella = await Umbrella.findOne({ umbrellaId });
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
 
-    // Validate borrow code + expiry
+    // Validate borrow code
     if (
       umbrella.activeBorrowCode !== code ||
       !umbrella.activeBorrowCodeExpiresAt ||
@@ -37,10 +37,14 @@ exports.borrow = async (req, res) => {
     if (!umbrella.isAvailable)
       return res.status(400).json({ message: "Umbrella not available" });
 
-    // Clear borrow code
+    // Clear code
     umbrella.activeBorrowCode = null;
     umbrella.activeBorrowCodeExpiresAt = null;
+    umbrella.isAvailable = false;
+    umbrella.currentLocation = `with:${studentName}`;
+    await umbrella.save();
 
+    // Create transaction
     const tx = await Transaction.create({
       umbrella: umbrella._id,
       umbrellaId,
@@ -52,69 +56,18 @@ exports.borrow = async (req, res) => {
       status: "OPEN",
     });
 
-    umbrella.isAvailable = false;
-    umbrella.currentLocation = `with:${studentName}`; // <-- store name instead of ID
-    await umbrella.save();
-
-    // Update student record
-    const student = await Student.findById(studentId);
-    if (student) {
-      // DEBUG: log incoming body so we see what frontend sent
-      console.log("BORROW REQUEST BODY:", req.body);
-
-      // try find by ID first
-      let student = null;
-      try {
-        student = await Student.findById(studentId);
-      } catch (e) {
-        console.warn("findById threw for studentId:", studentId, e.message);
-      }
-
-      if (!student) {
-        // If not found by id, attempt to find by email (frontend might be sending email)
-        console.log(
-          "Student not found by _id. Trying fallback lookups for:",
-          studentId
-        );
-        student = await Student.findOne({ email: studentId }).lean();
-      }
-
-      if (!student) {
-        // final fallback: try matching by name (rare) — log and error out clearly
-        console.log(
-          "Student still not found. Searching by name:",
-          req.body.studentName
-        );
-        student = await Student.findOne({ name: req.body.studentName }).lean();
-      }
-
-      if (!student) {
-        console.error(
-          "BORROW FAILED: student lookup failed. studentId provided:",
-          studentId
-        );
-        return res.status(400).json({
-          message: "Student not found (check studentId sent by client)",
-        });
-      }
-
-      // At this point student is a mongoose doc if found — if .lean() above returned a plain object, re-fetch as doc:
-      if (!student.save) {
-        // we used lean, fetch full doc to save
-        student = await Student.findById(student._id);
-      }
-
-      student.borrowedUmbrellaId = umbrellaId;
-      await student.save();
-    }
+    // Update student record (SIMPLE, CLEAN)
+    await Student.findByIdAndUpdate(studentId, {
+      borrowedUmbrellaId: umbrellaId,
+    });
 
     return res.json({ message: "Borrow successful", txId: tx._id });
   } catch (err) {
     console.error("Borrow error:", err);
     return res.status(500).json({ message: "Server error" });
   }
- 
 };
+
 
 /* =====================================================
    RETURN
@@ -125,27 +78,24 @@ exports.return = async (req, res) => {
     const returnLocation = req.body.returnLocation;
     const code = req.body.code;
 
-    const studentId = req.user.id; // ALWAYS CORRECT
+    const studentId = req.user.id;
 
-    if (!umbrellaId || !studentId || !code || !returnLocation)
+    if (!umbrellaId || !returnLocation || !code)
       return res.status(400).json({ message: "Missing fields" });
 
-    // FIND UMBRELLA FIRST ✔
     const umbrella = await Umbrella.findOne({ umbrellaId });
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
 
-    // NOW YOU CAN READ IT ✔
     console.log("RETURN DEBUG:", {
       umbrellaId,
       studentId,
       code,
-      returnLocation,
       expectedCode: umbrella.activeReturnCode,
       expiresAt: umbrella.activeReturnCodeExpiresAt,
     });
 
-    // VALIDATE CODE
+    // Validate return code
     if (
       umbrella.activeReturnCode !== code ||
       !umbrella.activeReturnCodeExpiresAt ||
@@ -156,33 +106,30 @@ exports.return = async (req, res) => {
         .json({ message: "Invalid or expired return code" });
     }
 
-    // FIND OPEN TRANSACTION
+    // Find active transaction
     const tx = await Transaction.findOne({
       umbrellaId,
-      studentId: req.user.id,
+      studentId,
       action: "BORROW",
       status: "OPEN",
     });
-
 
     if (!tx) return res.status(400).json({ message: "No open rental found" });
 
     tx.status = "COMPLETED";
     await tx.save();
 
-    // CLEAR RETURN CODE
+    // Clear umbrella data
     umbrella.activeReturnCode = null;
     umbrella.activeReturnCodeExpiresAt = null;
     umbrella.isAvailable = true;
     umbrella.currentLocation = returnLocation;
     await umbrella.save();
 
-    // CLEAR student record
-    const student = await Student.findById(studentId);
-    if (student) {
-      student.borrowedUmbrellaId = null;
-      await student.save();
-    }
+    // Clear student rented umbrella
+    await Student.findByIdAndUpdate(studentId, {
+      borrowedUmbrellaId: null,
+    });
 
     return res.json({ message: "Return successful" });
   } catch (err) {
@@ -190,6 +137,7 @@ exports.return = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 /* =====================================================

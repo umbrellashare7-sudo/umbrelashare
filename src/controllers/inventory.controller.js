@@ -87,23 +87,28 @@ exports.generateCode = async (req, res) => {
     if (!umbrella)
       return res.status(404).json({ message: "Umbrella not found" });
 
-    // Generate code + expiry
     const code = generateCode4();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     if (type === "borrow") {
+      if (!umbrella.isAvailable) {
+        return res.status(400).json({
+          message:
+            "Cannot generate borrow code — umbrella is currently rented.",
+        });
+      }
+
       umbrella.activeBorrowCode = code;
       umbrella.activeBorrowCodeExpiresAt = expiresAt;
+    } else if (type === "return") {
+      if (umbrella.isAvailable) {
+        return res.status(400).json({
+          message: "Cannot generate return code — umbrella is not rented.",
+        });
+      }
 
-      // clear opposite
-      umbrella.activeReturnCode = null;
-      umbrella.activeReturnCodeExpiresAt = null;
-    } else {
       umbrella.activeReturnCode = code;
       umbrella.activeReturnCodeExpiresAt = expiresAt;
-
-      umbrella.activeBorrowCode = null;
-      umbrella.activeBorrowCodeExpiresAt = null;
     }
 
     await umbrella.save();
@@ -120,6 +125,7 @@ exports.generateCode = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.listPublic = async (req, res) => {
   try {
